@@ -6,7 +6,7 @@
 //
 
 /// Custom splitters must conform to SplitDivider, just like the default `Splitter`.
-@MainActor 
+@MainActor
 public protocol SplitDivider: View {
     var styling: SplitStyling { get }
 }
@@ -20,9 +20,9 @@ import SwiftUI
 /// specifies whether we are previewing what Split will look like when we hide a side. The Splitter uses `previewHide`
 /// to change its `dividerColor` to `.clear` when being previewed, while Split uses it to determine whether the
 /// spacing between views should be `visibleThickness` or zero.
-@MainActor 
+@MainActor
 public struct Splitter: SplitDivider {
-    
+
     @EnvironmentObject private var layout: LayoutHolder
     @ObservedObject public var styling: SplitStyling
     @State private var dividerColor: Color  // Changes based on styling.previewHide
@@ -34,7 +34,7 @@ public struct Splitter: SplitDivider {
     private let privateInset: CGFloat?
     private let privateVisibleThickness: CGFloat?
     private let privateInvisibleThickness: CGFloat?
-    
+
     // Defaults
     public static var defaultColor: Color = Color.gray
     public static var defaultInset: CGFloat = 6
@@ -61,7 +61,7 @@ public struct Splitter: SplitDivider {
                     .frame(height: visibleThickness)
                     .padding(EdgeInsets(top: 0, leading: inset, bottom: 0, trailing: inset))
             }
-        }
+        } 
         .contentShape(Rectangle())
         .task { dividerColor = color } // Otherwise, styling.color does not appear at open
         // If we are previewing hiding a side using drag-to-hide, and the splitter will be
@@ -75,21 +75,11 @@ public struct Splitter: SplitDivider {
                 dividerColor = privateColor ?? color
             }
         }
-        // Perhaps should consider some kind of custom hoverEffect, since the cursor change
-        // on hover doesn't work on iOS.
-        .onHover { inside in
-            #if targetEnvironment(macCatalyst) || os(macOS)
-            // With nested split views, it's possible to transition from one Splitter to another,
-            // so we always need to pop the current cursor (a no-op when it's the only one). We
-            // may or may not push the hover cursor depending on whether it's inside or not.
-            NSCursor.pop()
-            if inside {
-                layout.isHorizontal ? NSCursor.resizeLeftRight.push() : NSCursor.resizeUpDown.push()
-            }
-            #endif
-        }
+        #if targetEnvironment(macCatalyst) || os(macOS)
+        .cursor(layout.isHorizontal ? NSCursor.columnResize : NSCursor.rowResize)
+        #endif    
     }
-    
+
     public init(color: Color? = nil, inset: CGFloat? = nil, visibleThickness: CGFloat? = nil, invisibleThickness: CGFloat? = nil) {
         privateColor = color
         privateInset = inset
@@ -98,7 +88,7 @@ public struct Splitter: SplitDivider {
         styling = SplitStyling(color: color, inset: inset, visibleThickness: visibleThickness, invisibleThickness: invisibleThickness)
         _dividerColor = State(initialValue: color ?? Self.defaultColor)
     }
-    
+
     public init(styling: SplitStyling) {
         privateColor = styling.color
         privateInset = styling.inset
@@ -107,7 +97,7 @@ public struct Splitter: SplitDivider {
         self.styling = styling
         _dividerColor = State(initialValue: styling.color)
     }
-    
+
 }
 
 struct Splitter_Previews: PreviewProvider {
